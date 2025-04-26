@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+service MetricsService {
+    rpc ReportMetrics (MetricsRequest) returns (MetricsResponse);
+}
+
+message MetricsRequest {
+    string server_id = 1;
+    float cpu_usage= 2;
+    float memory_usage = 3;
+    float disk_usage = 4;
+    float network_in = 5;
+    float network_out = 6;
+}
+
+message MetricsResponse {
+    bool success = 1;
+    string message = 2;
+}
