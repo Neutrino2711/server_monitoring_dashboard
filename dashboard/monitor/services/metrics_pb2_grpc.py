@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import metrics_pb2 as metrics__pb2
+from monitor.services import metrics_pb2 as metrics__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__

@@ -1,8 +1,0 @@
-django 
-channels
-channels-redis
-grpcio
-grpcio-tools 
-djangorestframework 
-django-ratelimit
-redit

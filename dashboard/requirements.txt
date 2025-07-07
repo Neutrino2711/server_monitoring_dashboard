@@ -1,0 +1,12 @@
+django 
+channels
+channels-redis
+markdown 
+requests
+grpcio
+grpcio-tools 
+djangorestframework 
+django-ratelimit 
+django-redis
+redit
+daphne

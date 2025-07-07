@@ -1,12 +1,24 @@
 from django.core.cache import cache
-from rest_framework import generics,status 
+from rest_framework import viewsets,generics,status 
 from rest_framework.response import Response 
 from rest_framework.throttling import UserRateThrottle 
 from .models import Server, ServerMetric 
 from .serializers import ServerSerializer, ServerMetricSerializer
+from django.shortcuts import render 
+from monitor.models import Server 
 
 class CustomThrottle(UserRateThrottle):
     rate = '100/hour'
+
+class ServerViewSet(viewsets.ModelViewSet):
+    queryset = Server.objects.all()
+    serializer_class = ServerSerializer
+    throttle_classes = [CustomThrottle]
+    lookup_field = 'id'
+
+def dashboard_view(request):
+    servers = Server.objects.all()
+    return render(request,'monitor/dashboard.html',{'servers': servers})
 
 class ServerListView(generics.ListCreateAPIView):
     queryset = Server.objects.all()
@@ -41,5 +53,4 @@ class ServerMetricsView(generics.ListAPIView):
         cache.set(cache_key,serializer.data, timeout=60)
 
         return Response(serializer.data)
-    
     

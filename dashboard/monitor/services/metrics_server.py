@@ -1,11 +1,21 @@
+# Django Environment Setup
+import os 
+import django 
+import sys 
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','dashboard.settings')
+django.setup()
+
+
 from concurrent import futures 
 import grpc 
 import time 
 from django.core.cache import cache 
 from channels.layers import get_channel_layer 
 from asgiref.sync import async_to_sync 
-from . import metrics_pb2_grpc , metrics_pb2 
-from ..models import Server, ServerMetric 
+from monitor.services import metrics_pb2_grpc , metrics_pb2 
+from monitor.models import Server, ServerMetric 
 
 class MetricsService(metrics_pb2_grpc.MetricsServiceServicer):
     def ReportMetrics(self, request, context):
@@ -47,8 +57,8 @@ class MetricsService(metrics_pb2_grpc.MetricsServiceServicer):
                 }
             )
 
-            return metrics_pb2.MetricResponse(
-                succces = True,
+            return metrics_pb2.MetricsResponse(
+                success = True,
                 message="Metrics recorded successfully"
             )
         except Server.DoesNotExist:
@@ -57,6 +67,7 @@ class MetricsService(metrics_pb2_grpc.MetricsServiceServicer):
                 message='Server not found'
             )
         except Exception as e:
+            print(e)
             return metrics_pb2.MetricsResponse(
                 success=False,
                 message=str(e)

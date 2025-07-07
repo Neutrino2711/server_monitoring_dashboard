@@ -1,0 +1,3 @@
+{
+  "python.analysis.extraPaths": ["./dashboard/monitor/services/metrics_pb2_"]
+}

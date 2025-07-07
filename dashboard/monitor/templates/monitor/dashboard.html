@@ -1,0 +1,132 @@
+<!-- monitor/templates/monitor/dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Monitoring Dashboard</title>
+    <style>
+        .metric-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .metric-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .metric-label {
+            color: #666;
+        }
+        canvas {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Server Monitoring</h1>
+    
+    <div id="server-selector">
+        <select id="server-select">
+            {% for server in servers %}
+                <option value="{{ server.id }}">{{ server.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="metric-container" id="current-metrics">
+        <!-- Metrics will be populated by JavaScript -->
+    </div>
+    
+    <canvas id="metrics-chart"></canvas>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // WebSocket connection
+        const socket = new WebSocket(
+            'ws://127.0.0.1:8001/ws/server-metrics/'
+        );
+        
+        // Chart initialization
+        const ctx = document.getElementById('metrics-chart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'CPU Usage (%)', data: [], borderColor: 'rgb(255, 99, 132)' },
+                    { label: 'Memory Usage (%)', data: [], borderColor: 'rgb(54, 162, 235)' },
+                    { label: 'Disk Usage (%)', data: [], borderColor: 'rgb(255, 206, 86)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        // Handle incoming WebSocket messages
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            updateMetricsDisplay(data);
+            updateChart(data);
+        };
+        
+        function updateMetricsDisplay(metrics) {
+            const container = document.getElementById('current-metrics');
+            container.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.cpu_usage.toFixed(1)}%</div>
+                    <div class="metric-label">CPU Usage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.memory_usage.toFixed(1)}%</div>
+                    <div class="metric-label">Memory Usage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.disk_usage.toFixed(1)}%</div>
+                    <div class="metric-label">Disk Usage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.network_in.toFixed(1)} KB/s</div>
+                    <div class="metric-label">Network In</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.network_out.toFixed(1)} KB/s</div>
+                    <div class="metric-label">Network Out</div>
+                </div>
+            `;
+        }
+        
+        function updateChart(metrics) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Add new data
+            chart.data.labels.push(now);
+            chart.data.datasets[0].data.push(metrics.cpu_usage);
+            chart.data.datasets[1].data.push(metrics.memory_usage);
+            chart.data.datasets[2].data.push(metrics.disk_usage);
+            
+            // Limit to 20 data points
+            if (chart.data.labels.length > 20) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            chart.update();
+        }
+    </script>
+</body>
+</html>
